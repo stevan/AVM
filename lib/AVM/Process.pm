@@ -18,6 +18,7 @@ class AVM::Process {
 
     field $entry  :param :reader;  # start address of process
     field $name   :param :reader;  # name of the process (aka - entry label)
+    field $parent :param :reader = undef;
 
     field $pid    :reader;
     field $status :reader;         # one of the constants above
@@ -56,6 +57,6 @@ class AVM::Process {
     method to_string { sprintf '[%02d]<%s:%03d>' => $pid, $name, $entry }
 
     method dump {
-        sprintf 'pid: %03d, status: %s, entry: %03d, label: %s', $pid, $status, $entry, $name;
+        sprintf 'proc{ pid: %03d, name: %s, status: %s, entry: %03d, parent: %s }', $pid, $name, $status, $entry, $parent // '~';
     }
 }
