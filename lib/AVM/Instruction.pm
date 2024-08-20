@@ -32,7 +32,9 @@ class AVM::Instruction {
             JUMP
             JUMP_IF_TRUE
             JUMP_IF_FALSE
+            JUMP_TO
 
+            NEW_MSG
             CREATE_MSG
             MSG_TO
             MSG_FROM

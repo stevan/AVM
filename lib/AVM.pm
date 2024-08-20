@@ -16,14 +16,16 @@ class AVM {
     field $monitor :param :reader = undef;
 
     field @code;
-    field @procs;
-    field @bus;
+    field @procs :reader;
+    field @bus   :reader;
 
     field $ic :reader = 0;
     field $pc :reader = 0;
     field $ci :reader = undef;
 
     field $assembler;
+
+    field @reaped :reader;
 
     method assemble ($entry_label, $source) {
         $assembler = AVM::Assembler->new;
@@ -71,8 +73,11 @@ class AVM {
         );
 
         while (@procs) {
-            say "before running:\n    ".join "\n    " => map $_->dump, @procs;
-            say "bus: ".join ', ' => @bus;
+            if (DEBUG) {
+                say "before running:\n    ".join "\n    " => map $_->dump, @procs;
+                say "bus: ".join ', ' => @bus;
+            }
+
             my @p = @procs;
 
             while (@bus) {
@@ -85,16 +90,28 @@ class AVM {
             }
 
             foreach my $p (@p) {
-                say "excuting process: ".$p->dump;
+                say "excuting process: ".$p->dump if DEBUG;
                 if ($p->is_ready) {
                     $self->execute($p);
                 }
             }
 
-            say "bus: ".join ', ' => @bus;
-            say "after running:\n    ".join "\n    " => map $_->dump, @procs;
-            @procs = grep !$_->is_stopped, @procs;
+            if (DEBUG) {
+                say "bus: ".join ', ' => @bus;
+                say "after running:\n    ".join "\n    " => map $_->dump, @procs;
+            }
+
+            @procs = map {
+                if ($_->is_stopped) {
+                    push @reaped => $_;
+                    ();
+                } else {
+                    $_;
+                }
+            } @procs;
         }
+
+        $self;
     }
 
     method execute ($p) {
@@ -172,11 +189,8 @@ class AVM {
             # ----------------------------
             elsif ($op == AVM::Instruction::PUT) {
                 my $x = $p->pop;
-                if (DEBUG) {
-                   $monitor->out($self, $p, $x)
-                } else {
-                    print $x;
-                }
+                $p->sod->put($x);
+                $monitor->out($self, $p) if DEBUG;
             }
             # ----------------------------
             # conditions
@@ -194,10 +208,20 @@ class AVM {
                 my $x = $p->pop;
                 $pc = $a if $x;
             }
+            elsif ($op == AVM::Instruction::JUMP_TO) {
+                my $a = $p->pop;
+                $pc = $a;
+            }
             # ----------------------------
             # ...
             # ----------------------------
             elsif ($op == AVM::Instruction::CREATE_MSG) {
+                my $to   = $p->pop;
+                my $from = $p->pop;
+                my $body = $p->pop;
+                $p->push( $self->create_new_message( $to, $from, $body ) );
+            }
+            elsif ($op == AVM::Instruction::NEW_MSG) {
                 my $to   = $p->pop;
                 my $body = $p->pop;
                 $p->push( $self->create_new_message( $to, $p, $body ) );

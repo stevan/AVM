@@ -56,6 +56,6 @@ class AVM::Process {
     method to_string { sprintf '[%02d]<%s:%03d>' => $pid, $name, $entry }
 
     method dump {
-        sprintf 'status: %s, entry: %03d, label: %s', $status, $entry, $name;
+        sprintf 'pid: %03d, status: %s, entry: %03d, label: %s', $pid, $status, $entry, $name;
     }
 }
