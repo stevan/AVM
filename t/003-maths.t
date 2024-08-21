@@ -10,10 +10,58 @@ use AVM::Assembler::Assembly;
 
 =pod
 
+# plain Perl version of recursive multipler ...
+
 sub mul ($x, $y) {
     return 0  if $y == 0;
     return $x if $y == 1;
     return $x + mul( $x, $y - 1 );
+}
+
+# pseudo code for Actor multipler
+
+muliplier {
+    recv (msg) {
+        if (msg.body.1 == 0) {
+            msg.sender ! [0];
+        }
+        else if (msg.body.1 == 1) {
+            msg.sender ! msg.body.0;
+        }
+        else {
+            mul = spawn(muliplier);
+            mul ! [ msg.body.0, (msg.body.1 - 1) ];
+
+            recv (msg2) {
+                add = spawn(adder);
+                add ! [ msg.body.0, msg2.body ];
+
+                recv (msg3) {
+                    msg.sender ! msg3.body;
+                }
+            }
+        }
+        stop;
+    }
+}
+
+adder {
+    recv (msg) {
+        msg.from ! [ msg.body.0 + msg.body.2 ];
+        stop;
+    }
+}
+
+main {
+    mul = spawn(muliplier);
+
+    mul ! [4, 10];
+
+    recv (msg) {
+        put msg;
+
+        stop;
+    }
 }
 
 =cut
@@ -22,66 +70,66 @@ my $vm = AVM->new(
     monitor => AVM::Monitor->new,
 )->assemble('main', [
     '.multiplier',
-        PUSH, 0,
-        # (0 = $acc, 1 = $msg, 2 = $msg->body[0], 3 = $msg->body[1] as $i )
+        # (0 = $msg, 1 = $msg->body[0], 2 = $msg->body[1] )
         RECV,
 
-        LOAD, 1,
+        LOAD, 0,
         MSG_BODY_AT, 0,
 
-        LOAD, 1,
+        LOAD, 0,
         MSG_BODY_AT, 1,
 
         DUP,
         PUSH, 1,
         EQ_INT,
-        JUMP_IF_TRUE, '#multiplier.return.early',
+        JUMP_IF_TRUE, '#multiplier.return.early.1',
 
         DUP,
         PUSH, 0,
         EQ_INT,
-        JUMP_IF_TRUE, '#multiplier.return',
+        JUMP_IF_TRUE, '#multiplier.return.early.0',
 
-        LOAD, 3,
-        DEC_INT,
         LOAD, 2,
+        DEC_INT,
+        LOAD, 1,
         SPAWN, '#multiplier',
         NEW_MSG2,
         SEND,
 
         RECV,
         MSG_BODY,
-        LOAD, 2,
+        LOAD, 1,
         SPAWN, '#adder',
         NEW_MSG2,
         SEND,
 
         RECV,
         MSG_BODY,
-        STORE, 0,
         JUMP, '#multiplier.return',
 
-        '.multiplier.return.early',
+        '.multiplier.return.early.1',
+            LOAD, 1,
+            JUMP, '#multiplier.return',
+
+        '.multiplier.return.early.0',
             LOAD, 2,
-            STORE, 0,
+            JUMP, '#multiplier.return',
 
         '.multiplier.return',
             LOAD, 0,
-            LOAD, 1,
             MSG_FROM,
             NEW_MSG,
             SEND,
 
+        POP, POP, POP, # clear the locals
         STOP,
 
     '.adder',
         RECV,
 
-        DUP,
-        DUP,
-        DUP,
+        LOAD, 0,
         MSG_BODY_AT, 0,
-        SWAP,
+        LOAD, 0,
         MSG_BODY_AT, 1,
         ADD_INT,
         SWAP,
@@ -105,6 +153,7 @@ my $vm = AVM->new(
         MSG_BODY,
         PUT,
 
+        POP, # clear the local
         STOP,
 ])->run;
 
