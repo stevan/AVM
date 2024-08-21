@@ -8,7 +8,12 @@ class AVM::Message {
 
     field $to   :param :reader;
     field $from :param :reader;
-    field $body :param :reader;
+    field $body :param :reader //= [];
 
-    method to_string { sprintf 'msg<to:%s from:%s body:[%s]>', $to, $from // '~', $body // '~' }
+    method to_string {
+        sprintf 'msg<to:%s from:%s body:[%s]>',
+            $to,
+            $from // '~',
+            (@$body ? (join ', ' => @$body) : '~')
+    }
 }

@@ -72,11 +72,7 @@ class AVM {
 
     method run {
 
-        push @bus => AVM::Message->new(
-            to   => $procs[0],
-            from => undef,
-            body => undef,
-        );
+        $procs[0]->ready;
 
         while (@procs) {
             if (DEBUG) {

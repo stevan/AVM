@@ -84,6 +84,31 @@ class AVM::CPU {
             elsif ($op == AVM::Instruction::DEC_INT) {
                 $p->push( $p->pop - 1 );
             }
+            elsif ($op == AVM::Instruction::ADD_INT) {
+                my $r = $p->pop;
+                my $l = $p->pop;
+                $p->push( $l + $r );
+            }
+            elsif ($op == AVM::Instruction::SUB_INT) {
+                my $r = $p->pop;
+                my $l = $p->pop;
+                $p->push( $l - $r );
+            }
+            elsif ($op == AVM::Instruction::MUL_INT) {
+                my $r = $p->pop;
+                my $l = $p->pop;
+                $p->push( $l * $r );
+            }
+            elsif ($op == AVM::Instruction::DIV_INT) {
+                my $r = $p->pop;
+                my $l = $p->pop;
+                $p->push( $l / $r );
+            }
+            elsif ($op == AVM::Instruction::MOD_INT) {
+                my $r = $p->pop;
+                my $l = $p->pop;
+                $p->push( $l % $r );
+            }
             # ----------------------------
             # comparisons
             # ----------------------------
@@ -97,10 +122,20 @@ class AVM::CPU {
                 my $a = $p->pop;
                 $p->push( $a < $b ? 1 : 0 );
             }
+            elsif ($op == AVM::Instruction::LTE_INT) {
+                my $b = $p->pop;
+                my $a = $p->pop;
+                $p->push( $a <= $b ? 1 : 0 );
+            }
             elsif ($op == AVM::Instruction::GT_INT) {
                 my $b = $p->pop;
                 my $a = $p->pop;
                 $p->push( $a > $b ? 1 : 0 );
+            }
+            elsif ($op == AVM::Instruction::GTE_INT) {
+                my $b = $p->pop;
+                my $a = $p->pop;
+                $p->push( $a >= $b ? 1 : 0 );
             }
             # ----------------------------
             # i/0
@@ -137,12 +172,40 @@ class AVM::CPU {
                 my $to   = $p->pop;
                 my $from = $p->pop;
                 my $body = $p->pop;
-                $p->push( $vm->create_new_message( $to, $from, $body ) );
+                $p->push( $vm->create_new_message( $to, $from, [ $body ] ) );
+            }
+            elsif ($op == AVM::Instruction::CREATE_MSG2) {
+                my $to    = $p->pop;
+                my $from  = $p->pop;
+                my $body1 = $p->pop;
+                my $body2 = $p->pop;
+                $p->push( $vm->create_new_message( $to, $from, [ $body1, $body2 ] ) );
+            }
+            elsif ($op == AVM::Instruction::CREATE_MSG2) {
+                my $to    = $p->pop;
+                my $from  = $p->pop;
+                my $body1 = $p->pop;
+                my $body2 = $p->pop;
+                my $body3 = $p->pop;
+                $p->push( $vm->create_new_message( $to, $from, [ $body1, $body2, $body3 ] ) );
             }
             elsif ($op == AVM::Instruction::NEW_MSG) {
                 my $to   = $p->pop;
                 my $body = $p->pop;
-                $p->push( $vm->create_new_message( $to, $p, $body ) );
+                $p->push( $vm->create_new_message( $to, $p, [ $body ] ) );
+            }
+            elsif ($op == AVM::Instruction::NEW_MSG2) {
+                my $to    = $p->pop;
+                my $body1 = $p->pop;
+                my $body2 = $p->pop;
+                $p->push( $vm->create_new_message( $to, $p, [ $body1, $body2 ] ) );
+            }
+            elsif ($op == AVM::Instruction::NEW_MSG2) {
+                my $to    = $p->pop;
+                my $body1 = $p->pop;
+                my $body2 = $p->pop;
+                my $body3 = $p->pop;
+                $p->push( $vm->create_new_message( $to, $p, [ $body1, $body2, $body3 ] ) );
             }
             elsif ($op == AVM::Instruction::MSG_TO) {
                 my $msg = $p->pop;
@@ -154,7 +217,12 @@ class AVM::CPU {
             }
             elsif ($op == AVM::Instruction::MSG_BODY) {
                 my $msg = $p->pop;
-                $p->push($msg->body);
+                $p->push( $msg->body->[0] );
+            }
+            elsif ($op == AVM::Instruction::MSG_BODY_AT) {
+                my $idx = $self->next_op;
+                my $msg = $p->pop;
+                $p->push( $msg->body->[$idx] );
             }
             # ----------------------------
             # ...
@@ -176,8 +244,8 @@ class AVM::CPU {
                     my $msg = $p->sid->get;
                     $p->push( $msg );
                 } else {
-                    $p->set_entry( $pc );
-                    $p->yeild;
+                    $p->set_entry( $pc - 1 );
+                    $p->yield;
                 }
             }
             elsif ($op == AVM::Instruction::NEXT) {

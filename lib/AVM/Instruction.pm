@@ -22,10 +22,17 @@ class AVM::Instruction {
 
             INC_INT
             DEC_INT
+            ADD_INT
+            SUB_INT
+            MUL_INT
+            DIV_INT
+            MOD_INT
 
             EQ_INT
             LT_INT
+            LTE_INT
             GT_INT
+            GTE_INT
 
             PUT
 
@@ -35,10 +42,15 @@ class AVM::Instruction {
             JUMP_TO
 
             NEW_MSG
+            NEW_MSG2
+            NEW_MSG3
             CREATE_MSG
+            CREATE_MSG2
+            CREATE_MSG3
             MSG_TO
             MSG_FROM
             MSG_BODY
+            MSG_BODY_AT
 
             LOAD
             STORE
