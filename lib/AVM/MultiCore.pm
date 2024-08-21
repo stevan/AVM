@@ -3,6 +3,8 @@
 use v5.40;
 use experimental qw[ class ];
 
+use importer 'List::Util' => qw[ min max ];
+
 use AVM::Assembler;
 use AVM::Monitor;
 
@@ -12,22 +14,31 @@ use AVM::Message;
 
 use AVM::CPU;
 
-class AVM {
+class AVM::MultiCore {
     use constant DEBUG => $ENV{DEBUG} // 0;
-    use constant QUOTA => 1024; # sensible default for now
 
     field $monitor :param :reader = undef;
 
-    field $cpu   :reader;
+    field $num_cores     :param :reader;
+    field $process_quota :param :reader;
+    field $clock_slice   :param :reader;
+
+    field @cpus  :reader;
     field @procs :reader;
     field @bus   :reader;
+
+    field $ic :reader = 0;
+    field $pc :reader = 0;
+    field $ci :reader = undef;
 
     field $assembler;
 
     field @reaped :reader;
 
     ADJUST {
-        $cpu = AVM::CPU->new( vm => $self, id => 1 );
+        @cpus = map {
+            AVM::CPU->new( vm => $self, id => $_ )
+        } 1 .. $num_cores;
     }
 
     method assemble ($entry_label, $source) {
@@ -36,10 +47,10 @@ class AVM {
 
         my $entry = $assembler->label_to_addr->{$entry_label};
 
-        $cpu->load_code(
+        $_->load_code(
             $entry,
             $assembler->code,
-        );
+        ) foreach @cpus;
 
         @procs = ();
         $self->spawn_new_process( $entry );
@@ -89,10 +100,33 @@ class AVM {
                 }
             }
 
-            foreach my $p (@p) {
-                say "excuting process: ".$p->dump if DEBUG;
-                if ($p->is_ready) {
-                    $cpu->run($p, QUOTA);
+            my @ready = grep $_->is_ready, @p;
+
+            if (scalar @ready == 1) {
+                $cpus[0]->run( $ready[0], $process_quota );
+            }
+            else {
+                $monitor->start_multi(\@cpus, \@ready) if DEBUG;
+
+                my $quota = $process_quota;
+                while ($quota && @ready) {
+                    my $avail = min( $#ready, $#cpus );
+
+                    foreach my $i ( 0 .. $avail ) {
+                        if ($ready[$i]->is_ready) {
+                            foreach ( 1 .. $clock_slice ) {
+                                $cpus[$i]->execute( $ready[$i] );
+                                last unless $ready[$i]->is_ready;
+                            }
+                            $monitor->slice(undef, undef) if DEBUG;
+                        }
+                    }
+
+                    #warn "!!!!!!!!!!!!!!! ".scalar @ready;
+                    @ready = grep $_->is_ready, @ready;
+                    #warn "!!!!!!!!!!!!!!! ".scalar @ready;
+
+                    $quota -= $clock_slice;
                 }
             }
 

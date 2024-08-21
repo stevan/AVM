@@ -20,10 +20,11 @@ class AVM::Process {
     field $name   :param :reader;  # name of the process (aka - entry label)
     field $parent :param :reader = undef;
 
-    field $pid    :reader;
+    field $pid    :reader;         # unique process identifier
     field $status :reader;         # one of the constants above
+    field $pc     :reader;         # seperate program counter
     field @stack  :reader;         # seperate stack
-    field $sp     :reader = -1;
+    field $sp     :reader = -1;    # and stack pointer
 
     field $sid :reader;
     field $sod :reader;
@@ -35,7 +36,11 @@ class AVM::Process {
         $sod = AVM::Port->new;
 
         $pid = ++$PID_SEQ;
+        $pc  = $entry;
     }
+
+    method inc_pc         { $pc++ }
+    method set_pc ($addr) { $pc = $addr }
 
     method set_entry ($e) { $entry = $e }
 
@@ -47,14 +52,14 @@ class AVM::Process {
     method set_stack_at ($i, $v) { $stack[$i] = $v }
 
     method ready { $status = READY   }
-    method yield { $status = YIELDED }
+    method yield { $status = YIELDED; $pc = $entry; }
     method stop  { $status = STOPPED }
 
     method is_ready   { $status == READY   }
     method is_yielded { $status == YIELDED }
     method is_stopped { $status == STOPPED }
 
-    method to_string { sprintf '[%02d]<%s:%03d>' => $pid, $name, $entry }
+    method to_string { sprintf '<%02d:%s>[%03d]' => $pid, $name, $entry }
 
     method dump {
         sprintf 'proc{ pid: %03d, name: %s, status: %s, entry: %03d, parent: %s }', $pid, $name, $status, $entry, $parent // '~';

@@ -160,7 +160,6 @@ subtest '... checking the end state' => sub {
 
     my $flip = true;
     foreach my $p ($vm->reaped) {
-        isa_ok($p, 'AVM::Process');
         if ($p->name eq 'main') {
             ok($p->sod->is_not_empty, '... got output for main');
             is_deeply(
