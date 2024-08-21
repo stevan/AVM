@@ -20,9 +20,7 @@ my $vm = AVM->new(
         PUT,
 
         DUP,
-        PUSH, 0,
-        EQ_INT,
-        JUMP_IF_TRUE, '#echo.stop',
+        JUMP_IF_ZERO, '#echo.stop',
 
         DEC_INT,
 

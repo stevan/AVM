@@ -112,6 +112,10 @@ class AVM::CPU {
             # ----------------------------
             # comparisons
             # ----------------------------
+            elsif ($op == AVM::Instruction::EQ_ZERO) {
+                my $a = $p->pop;
+                $p->push( $a == 0 ? 1 : 0 );
+            }
             elsif ($op == AVM::Instruction::EQ_INT) {
                 my $b = $p->pop;
                 my $a = $p->pop;
@@ -151,15 +155,25 @@ class AVM::CPU {
             elsif ($op == AVM::Instruction::JUMP) {
                 $pc = $self->next_op;
             }
+            elsif ($op == AVM::Instruction::JUMP_IF_TRUE) {
+                my $a = $self->next_op;
+                my $x = $p->pop;
+                $pc = $a if $x;
+            }
             elsif ($op == AVM::Instruction::JUMP_IF_FALSE) {
                 my $a = $self->next_op;
                 my $x = $p->pop;
                 $pc = $a unless $x;
             }
-            elsif ($op == AVM::Instruction::JUMP_IF_TRUE) {
+            elsif ($op == AVM::Instruction::JUMP_IF_ZERO) {
                 my $a = $self->next_op;
                 my $x = $p->pop;
-                $pc = $a if $x;
+                $pc = $a if $x == 0;
+            }
+            elsif ($op == AVM::Instruction::JUMP_IF_NOT_ZERO) {
+                my $a = $self->next_op;
+                my $x = $p->pop;
+                $pc = $a if $x == 0;
             }
             elsif ($op == AVM::Instruction::JUMP_TO) {
                 my $a = $p->pop;

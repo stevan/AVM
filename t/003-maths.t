@@ -80,14 +80,12 @@ my $vm = AVM->new(
         MSG_BODY_AT, 1,
 
         DUP,
+        JUMP_IF_ZERO, '#multiplier.return.early.0',
+
+        DUP,
         PUSH, 1,
         EQ_INT,
         JUMP_IF_TRUE, '#multiplier.return.early.1',
-
-        DUP,
-        PUSH, 0,
-        EQ_INT,
-        JUMP_IF_TRUE, '#multiplier.return.early.0',
 
         LOAD, 2,
         DEC_INT,
@@ -159,6 +157,29 @@ my $vm = AVM->new(
 
 subtest '... checking the end state' => sub {
     isa_ok($vm, 'AVM');
+
+    my $flip = true;
+    foreach my $p ($vm->reaped) {
+        isa_ok($p, 'AVM::Process');
+        if ($p->name eq 'main') {
+            ok($p->sod->is_not_empty, '... got output for main');
+            is_deeply(
+                [ $p->sod->buffer ],
+                [ 40 ],
+                '... got the expected output for main'
+            );
+        }
+        else {
+            if ($flip) {
+                is($p->name, 'multiplier', '... got the expected multiplier');
+                $flip = false;
+            } else {
+                is($p->name, 'adder', '... got the expected adder');
+                $flip = true;
+            }
+        }
+    }
+
 };
 
 done_testing;

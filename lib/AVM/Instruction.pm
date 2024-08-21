@@ -28,6 +28,7 @@ class AVM::Instruction {
             DIV_INT
             MOD_INT
 
+            EQ_ZERO
             EQ_INT
             LT_INT
             LTE_INT
@@ -39,6 +40,8 @@ class AVM::Instruction {
             JUMP
             JUMP_IF_TRUE
             JUMP_IF_FALSE
+            JUMP_IF_ZERO
+            JUMP_IF_NOT_ZERO
             JUMP_TO
 
             NEW_MSG
