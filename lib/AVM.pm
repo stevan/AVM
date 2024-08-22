@@ -47,7 +47,7 @@ class AVM {
         $self;
     }
 
-    method enqueue_message ($message) { push @bus => $message }
+    ## ... these two methods can be called from the opcodes ...
 
     method spawn_new_process ($entry, $parent=undef) {
         my $p = AVM::Process->new(
@@ -67,6 +67,8 @@ class AVM {
         );
     }
 
+    ## ...
+
     method run {
 
         $procs[0]->ready;
@@ -83,7 +85,7 @@ class AVM {
             while (@bus) {
                 my $msg = shift @bus;
                 my $to  = $msg->to;
-                $to->sid->put( $msg );
+                $to->input->put( $msg );
                 if ($to->is_yielded) {
                     $to->ready;
                 }
@@ -93,6 +95,12 @@ class AVM {
                 say "excuting process: ".$p->dump if DEBUG;
                 if ($p->is_ready) {
                     $cpu->run($p, QUOTA);
+                }
+            }
+
+            foreach my $p (@p) {
+                if ($p->output->is_not_empty) {
+                    push @bus => $p->output->flush;
                 }
             }
 

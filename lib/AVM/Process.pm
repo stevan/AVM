@@ -6,6 +6,7 @@ use experimental qw[ class ];
 use importer 'Scalar::Util' => qw[ dualvar ];
 
 use AVM::Port;
+use AVM::Device;
 
 class AVM::Process {
     use overload '""' => \&to_string;
@@ -26,14 +27,20 @@ class AVM::Process {
     field @stack  :reader;         # seperate stack
     field $sp     :reader = -1;    # and stack pointer
 
+    field $input  :reader;
+    field $output :reader;
+
     field $sid :reader;
     field $sod :reader;
 
     ADJUST {
         $status = READY;
 
-        $sid = AVM::Port->new;
-        $sod = AVM::Port->new;
+        $input  = AVM::Port->new;
+        $output = AVM::Port->new;
+
+        $sid = AVM::Device->new;
+        $sod = AVM::Device->new;
 
         $pid = ++$PID_SEQ;
         $pc  = $entry;

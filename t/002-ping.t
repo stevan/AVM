@@ -97,19 +97,19 @@ subtest '... checking the end state' => sub {
     is($main->name, 'main', '... got the expected name for main');
 
     is($ping1->name, 'ping', '... got the expected name for ping (1)');
-    ok($ping1->sod->is_not_empty, '... got output for ping (1)');
+    ok($ping1->sod->is_not_empty, '... got sod for ping (1)');
     is_deeply(
         [ $ping1->sod->buffer ],
         [ 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'E' ],
-        '... got the expected output for ping (1)'
+        '... got the expected sod for ping (1)'
     );
 
     is($ping2->name, 'ping', '... got the expected name for ping (2)');
-    ok($ping2->sod->is_not_empty, '... got output for ping (2)');
+    ok($ping2->sod->is_not_empty, '... got sod for ping (2)');
     is_deeply(
         [ $ping2->sod->buffer ],
         [ 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'E' ],
-        '... got the expected output for ping (1)'
+        '... got the expected sod for ping (1)'
     );
 
 

@@ -27,10 +27,6 @@ class AVM::MultiCore {
     field @procs :reader;
     field @bus   :reader;
 
-    field $ic :reader = 0;
-    field $pc :reader = 0;
-    field $ci :reader = undef;
-
     field $assembler;
 
     field @reaped :reader;
@@ -57,8 +53,6 @@ class AVM::MultiCore {
 
         $self;
     }
-
-    method enqueue_message ($message) { push @bus => $message }
 
     method spawn_new_process ($entry, $parent=undef) {
         my $p = AVM::Process->new(
@@ -94,7 +88,7 @@ class AVM::MultiCore {
             while (@bus) {
                 my $msg = shift @bus;
                 my $to  = $msg->to;
-                $to->sid->put( $msg );
+                $to->input->put( $msg );
                 if ($to->is_yielded) {
                     $to->ready;
                 }
@@ -127,6 +121,12 @@ class AVM::MultiCore {
                     #warn "!!!!!!!!!!!!!!! ".scalar @ready;
 
                     $quota -= $clock_slice;
+                }
+            }
+
+            foreach my $p (@p) {
+                if ($p->output->is_not_empty) {
+                    push @bus => $p->output->flush;
                 }
             }
 

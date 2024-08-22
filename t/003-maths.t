@@ -161,11 +161,11 @@ subtest '... checking the end state' => sub {
     my $flip = true;
     foreach my $p ($vm->reaped) {
         if ($p->name eq 'main') {
-            ok($p->sod->is_not_empty, '... got output for main');
+            ok($p->sod->is_not_empty, '... got sod for main');
             is_deeply(
                 [ $p->sod->buffer ],
                 [ 40 ],
-                '... got the expected output for main'
+                '... got the expected sod for main'
             );
         }
         else {

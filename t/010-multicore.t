@@ -87,11 +87,11 @@ subtest '... checking the end state' => sub {
     is($main->name, 'main', '... got the expected name for main');
     is($adder->name, 'adder', '... got the expected name for adder');
 
-    ok($main->sod->is_not_empty, '... got output for main');
+    ok($main->sod->is_not_empty, '... got sod for main');
     is_deeply(
         [ $main->sod->buffer ],
         [ 20, 75, 625, 575 ],
-        '... got the expected output for main'
+        '... got the expected sod for main'
     );
 
 };

@@ -52,7 +52,7 @@ class AVM::Monitor {
             $self->get_cpu_color($cpu)->@*,
             $cpu->id,
             $p->pid,
-            ($p->sod->buffer)[-1];
+            $p->sod->peek;
     }
 
     method exit ($cpu, $p) {

@@ -56,19 +56,19 @@ subtest '... checking the end state' => sub {
     is($main->name, 'main', '... got the expected name for main');
 
     is($echo1->name, 'echo', '... got the expected name for echo (1)');
-    ok($echo1->sod->is_not_empty, '... got output for echo (1)');
+    ok($echo1->sod->is_not_empty, '... got sod for echo (1)');
     is_deeply(
         [ $echo1->sod->buffer ],
         [ 5, 4, 3, 2, 1, 0 ],
-        '... got the expected output for echo (1)'
+        '... got the expected sod for echo (1)'
     );
 
     is($echo2->name, 'echo', '... got the expected name for echo (2)');
-    ok($echo2->sod->is_not_empty, '... got output for echo (2)');
+    ok($echo2->sod->is_not_empty, '... got sod for echo (2)');
     is_deeply(
         [ $echo2->sod->buffer ],
         [ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ],
-        '... got the expected output for echo (1)'
+        '... got the expected sod for echo (1)'
     );
 };
 

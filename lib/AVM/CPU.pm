@@ -154,8 +154,8 @@ class AVM::CPU {
         # i/0
         # ----------------------------
         elsif ($op == AVM::Instruction::PUT) {
-            my $x = $p->pop;
-            $p->sod->put($x);
+            my $string = $p->pop;
+            $p->sod->put( $string );
             $monitor->out($self, $p) if DEBUG;
         }
         # ----------------------------
@@ -260,11 +260,11 @@ class AVM::CPU {
         }
         elsif ($op == AVM::Instruction::SEND) {
             my $msg = $p->pop;
-            $vm->enqueue_message( $msg );
+            $p->output->put( $msg );
         }
         elsif ($op == AVM::Instruction::RECV) {
-            if ($p->sid->is_not_empty) {
-                my $msg = $p->sid->get;
+            if ($p->input->is_not_empty) {
+                my $msg = $p->input->get;
                 $p->push( $msg );
             } else {
                 $p->set_entry( $p->pc - 1 );
